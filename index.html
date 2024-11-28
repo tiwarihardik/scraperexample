@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraper API Example</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 py-10">
+
+    <!-- Main container -->
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md">
+
+        <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Scraper API Example</h1>
+
+        <!-- Form to input URL -->
+        <div class="mb-4">
+            <label for="url" class="block text-sm font-medium text-gray-700 mb-4">Enter URL to Scrape</label>
+            <input id="url" type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://example.com">
+        </div>
+
+        <!-- Button to trigger scraping -->
+        <button id="scrape-btn" class="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Scrape Website
+        </button>
+
+        <!-- Response Display Section -->
+        <div id="response" class="mt-6 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Scraped Data</h2>
+            <div id="content" class="mb-4">
+                <h3 class="text-lg font-medium text-gray-700">Content:</h3>
+                <p id="scraped-content"></p>
+            </div>
+
+            <div id="headings" class="mb-4">
+                <h3 class="text-lg font-medium text-gray-700">Headings:</h3>
+                <ul class="list-disc pl-5" id="heading-list"></ul>
+            </div>
+
+            <div id="links" class="mb-4">
+                <h3 class="text-lg font-medium text-gray-700">Links:</h3>
+                <ul class="list-disc pl-5" id="links-list"></ul>
+            </div>
+
+            <div id="images" class="mb-4">
+                <h3 class="text-lg font-medium text-gray-700">Images:</h3>
+                <ul class="list-disc pl-5" id="images-list"></ul>
+            </div>
+
+            <div id="metadata" class="mb-4">
+                <h3 class="text-lg font-medium text-gray-700">Metadata:</h3>
+                <ul class="list-disc pl-5" id="metadata-list"></ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Function to make the API request
+        async function scrapeWebsite() {
+            const url = document.getElementById("url").value;
+
+            if (!url) {
+                alert("Please enter a URL.");
+                return;
+            }
+
+            try {
+                // Log the request to verify the URL and token
+                console.log('Scraping URL:', url);
+
+                const response = await fetch(('https://webscraperapi-e.onrender.com/scrape?url=' + url), {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer tardMMsKLkcjfLYP0lHSpw4ZfD5Of4Hc`
+                    }
+                });
+
+                // Check if the response is okay (status 200)
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Log the API response for debugging
+                    console.log('API Response:', data);
+
+                    // Handle the response data
+                    displayScrapedData(data);
+                } else {
+                    // Log error message if the response is not okay
+                    const errorData = await response.json();
+                    console.error('API Error:', errorData);
+                    alert('Error: ' + errorData.error);
+                }
+            } catch (error) {
+                // Catch any errors and log them
+                console.error('Error:', error);
+                alert('An error occurred while scraping.');
+            }
+        }
+
+        // Function to display the scraped data
+        function displayScrapedData(data) {
+            // Show the response section
+            document.getElementById("response").classList.remove("hidden");
+            const contentDisplay = document.getElementById("scraped-content");
+            contentDisplay.innerHTML = data.content;
+            // Display headings
+            const headingsList = document.getElementById("heading-list");
+            headingsList.innerHTML = "";
+            for (let i = 1; i <= 6; i++) {
+                const headingKey = `h${i}`;
+                if (data.headings[headingKey]) {
+                    data.headings[headingKey].forEach(heading => {
+                        const li = document.createElement("li");
+                        li.textContent = heading;
+                        headingsList.appendChild(li);
+                    });
+                }
+            }
+
+            // Display links from tags
+            const linksList = document.getElementById("links-list");
+            linksList.innerHTML = "";
+            data.links_from_tags.forEach(link => {
+                const li = document.createElement("li");
+                li.innerHTML = `<a href="${link.href}" target="_blank">${link.text}</a>`;
+                linksList.appendChild(li);
+            });
+
+            // Display images
+            const imagesList = document.getElementById("images-list");
+            imagesList.innerHTML = "";
+            data.images.forEach(img => {
+                const li = document.createElement("li");
+                li.innerHTML = `<img src="${img.src}" alt="${img.alt}" class="max-w-xs mb-2" />`;
+                imagesList.appendChild(li);
+            });
+
+            // Display metadata
+            const metadataList = document.getElementById("metadata-list");
+            metadataList.innerHTML = "";
+            for (const [key, value] of Object.entries(data.metadata)) {
+                const li = document.createElement("li");
+                li.textContent = `${key}: ${value}`;
+                metadataList.appendChild(li);
+            }
+        }
+
+        // Add event listener for scrape button
+        document.getElementById("scrape-btn").addEventListener("click", scrapeWebsite);
+    </script>
+
+</body>
+
+</html>
